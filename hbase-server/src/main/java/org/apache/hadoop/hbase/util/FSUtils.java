@@ -62,6 +62,8 @@ import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.FileUtil;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.PathFilter;
+import org.apache.hadoop.fs.SafeMode;
+import org.apache.hadoop.fs.SafeModeAction;
 import org.apache.hadoop.fs.StorageType;
 import org.apache.hadoop.fs.permission.FsPermission;
 import org.apache.hadoop.hbase.ClusterId;
@@ -81,9 +83,12 @@ import org.apache.hadoop.hdfs.DFSClient;
 import org.apache.hadoop.hdfs.DFSHedgedReadMetrics;
 import org.apache.hadoop.hdfs.DFSUtil;
 import org.apache.hadoop.hdfs.DistributedFileSystem;
+<<<<<<< HEAD
 import org.apache.hadoop.hdfs.client.HdfsDataInputStream;
 import org.apache.hadoop.hdfs.protocol.DatanodeInfo;
 import org.apache.hadoop.hdfs.protocol.LocatedBlock;
+=======
+>>>>>>> 2d941f42699 (CDPD-54370: use LeaseRecoverable and SafeMode introduced in hadoop-common)
 import org.apache.hadoop.io.IOUtils;
 import org.apache.hadoop.ipc.RemoteException;
 import org.apache.hadoop.util.StringUtils;
@@ -244,12 +249,22 @@ public final class FSUtils {
   }
 
   /**
+<<<<<<< HEAD
    * Inquire the Active NameNode's safe mode status.
    * @param dfs A DistributedFileSystem object representing the underlying HDFS.
    * @return whether we're in safe mode
    */
   private static boolean isInSafeMode(DistributedFileSystem dfs) throws IOException {
     return dfs.setSafeMode(SAFEMODE_GET, true);
+=======
+   * We don't need the reflection anymore because we don't build with hadoop-1.x
+   * @param safeModeFs the filesystem that implemented safe mode
+   * @return true is in safe mode, false otherwise
+   * @throws IOException any exception when calling setSafeMode
+   */
+  private static boolean isInSafeMode(SafeMode safeModeFs) throws IOException {
+    return safeModeFs.setSafeMode(SafeModeAction.GET);
+>>>>>>> 2d941f42699 (CDPD-54370: use LeaseRecoverable and SafeMode introduced in hadoop-common)
   }
 
   /**
@@ -258,8 +273,8 @@ public final class FSUtils {
   public static void checkDfsSafeMode(final Configuration conf) throws IOException {
     boolean isInSafeMode = false;
     FileSystem fs = FileSystem.get(conf);
-    if (fs instanceof DistributedFileSystem) {
-      DistributedFileSystem dfs = (DistributedFileSystem) fs;
+    if (fs instanceof SafeMode) {
+      SafeMode dfs = (SafeMode) fs;
       isInSafeMode = isInSafeMode(dfs);
     }
     if (isInSafeMode) {
@@ -635,8 +650,8 @@ public final class FSUtils {
    */
   public static void waitOnSafeMode(final Configuration conf, final long wait) throws IOException {
     FileSystem fs = FileSystem.get(conf);
-    if (!(fs instanceof DistributedFileSystem)) return;
-    DistributedFileSystem dfs = (DistributedFileSystem) fs;
+    if (!(fs instanceof SafeMode)) return;
+    SafeMode dfs = (SafeMode) fs;
     // Make sure dfs is not in safe mode
     while (isInSafeMode(dfs)) {
       LOG.info("Waiting for dfs to exit safe mode...");
