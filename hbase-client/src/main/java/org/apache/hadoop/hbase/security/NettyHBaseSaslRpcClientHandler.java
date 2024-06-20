@@ -57,8 +57,6 @@ public class NettyHBaseSaslRpcClientHandler extends SimpleChannelInboundHandler<
 
   private final Configuration conf;
 
-  private final SaslClientAuthenticationProvider provider;
-
   // flag to mark if Crypto AES encryption is enable
   private boolean needProcessConnectionHeader = false;
 
@@ -73,7 +71,6 @@ public class NettyHBaseSaslRpcClientHandler extends SimpleChannelInboundHandler<
     this.saslPromise = saslPromise;
     this.ugi = ugi;
     this.conf = conf;
-    this.provider = provider;
     this.saslRpcClient = new NettyHBaseSaslRpcClient(conf, provider, token, serverAddr,
       serverPrincipal, fallbackAllowed, conf.get("hbase.rpc.protection",
         SaslUtil.QualityOfProtection.AUTHENTICATION.name().toLowerCase()));
@@ -90,10 +87,6 @@ public class NettyHBaseSaslRpcClientHandler extends SimpleChannelInboundHandler<
       return;
     }
 
-    // HBASE-23881 Clearly log when the client thinks that the SASL negotiation is complete.
-    if (LOG.isTraceEnabled()) {
-      LOG.trace("SASL negotiation for {} is complete", provider.getSaslAuthMethod().getName());
-    }
     saslRpcClient.setupSaslHandler(ctx.pipeline(), HANDLER_NAME);
     removeHandlers(ctx);
 
@@ -132,6 +125,7 @@ public class NettyHBaseSaslRpcClientHandler extends SimpleChannelInboundHandler<
           return saslRpcClient.getInitialResponse();
         }
       });
+<<<<<<< HEAD
       assert initialResponse != null;
       writeResponse(ctx, initialResponse);
       // HBASE-23881 We do not want to check if the SaslClient thinks the handshake is
@@ -150,6 +144,11 @@ public class NettyHBaseSaslRpcClientHandler extends SimpleChannelInboundHandler<
       // there are certain mechs like PLAIN which doesn't have a server response after the
       // initial authentication request. We cannot remove this tryComplete(), otherwise mechs
       // like PLAIN will fail with call timeout.
+=======
+      if (initialResponse != null) {
+        writeResponse(ctx, initialResponse);
+      }
+>>>>>>> parent of 3481aefce99 (HBASE-24179 Backport fix for "Netty SASL implementation does not wait for challenge response" to branch-2.x (#5472))
       tryComplete(ctx);
     } catch (Exception e) {
       // the exception thrown by handlerAdded will not be passed to the exceptionCaught below
@@ -185,8 +184,6 @@ public class NettyHBaseSaslRpcClientHandler extends SimpleChannelInboundHandler<
     });
     if (response != null) {
       writeResponse(ctx, response);
-    } else {
-      LOG.trace("SASL challenge response was empty, not sending response to server.");
     }
     tryComplete(ctx);
   }

@@ -287,4 +287,22 @@ public class TestShadeSaslAuthenticationProvider {
       }
     });
   }
+<<<<<<< HEAD
+=======
+
+  void validateRootCause(Throwable rootCause) {
+    LOG.info("Root cause was", rootCause);
+    if (rootCause instanceof RemoteException) {
+      RemoteException re = (RemoteException) rootCause;
+      IOException actualException = re.unwrapRemoteException();
+      assertEquals(InvalidToken.class, actualException.getClass());
+    } else {
+      StringWriter writer = new StringWriter();
+      rootCause.printStackTrace(new PrintWriter(writer));
+      String text = writer.toString();
+      assertTrue("Message did not contain expected text",
+        text.contains("Connection reset by peer"));
+    }
+  }
+>>>>>>> parent of 3481aefce99 (HBASE-24179 Backport fix for "Netty SASL implementation does not wait for challenge response" to branch-2.x (#5472))
 }
